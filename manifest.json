@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Intercom Counter",
+  "version": "0.1.0",
+  "description": "Tracks your daily Intercom dialogs, replies, and closed conversations.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://app.intercom.com/*"
+  ],
+  "background": {
+    "scripts": [
+      "src/background/background.js"
+    ],
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://app.intercom.com/*"
+      ],
+      "js": [
+        "src/content/intercom-observer.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_title": "Intercom Counter",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icon.svg",
+      "32": "assets/icon.svg",
+      "48": "assets/icon.svg",
+      "96": "assets/icon.svg"
+    }
+  },
+  "icons": {
+    "16": "assets/icon.svg",
+    "32": "assets/icon.svg",
+    "48": "assets/icon.svg",
+    "96": "assets/icon.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "intercom-counter@vpacifist.local",
+      "strict_min_version": "121.0"
+    }
+  }
+}
