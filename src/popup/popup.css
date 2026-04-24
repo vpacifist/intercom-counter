@@ -1,0 +1,121 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: #f4f7fb;
+  color: #132238;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+.app {
+  padding: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+}
+
+.header,
+.panel-row,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.eyebrow,
+.date,
+.stat-label,
+.panel-title,
+#status-line {
+  margin: 0;
+  color: #5b6b82;
+}
+
+h1 {
+  margin: 2px 0 0;
+  font-size: 28px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-card,
+.panel {
+  border: 1px solid rgba(19, 34, 56, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(19, 34, 56, 0.08);
+}
+
+.stat-card {
+  padding: 12px;
+}
+
+.stat-value {
+  margin: 10px 0 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.panel {
+  padding: 12px;
+}
+
+.event-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #edf2f7;
+  font-size: 12px;
+}
+
+.event-type {
+  font-weight: 600;
+  color: #1a365d;
+  text-transform: capitalize;
+}
+
+.secondary-button {
+  border: 0;
+  border-radius: 999px;
+  background: #1f6feb;
+  color: #fff;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.secondary-button:hover {
+  background: #195fc9;
+}
+
+.footer {
+  margin-top: 14px;
+  font-size: 12px;
+}

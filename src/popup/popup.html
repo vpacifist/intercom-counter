@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Intercom Counter</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Intercom Counter</p>
+          <h1>Today</h1>
+        </div>
+        <p id="current-date" class="date"></p>
+      </header>
+
+      <section class="stats" aria-label="Today metrics">
+        <article class="stat-card">
+          <p class="stat-label">Dialogs</p>
+          <p id="dialogs-value" class="stat-value">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Replies</p>
+          <p id="replies-value" class="stat-value">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Closed</p>
+          <p id="closed-value" class="stat-value">0</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-row">
+          <p class="panel-title">Recent events</p>
+          <button id="reset-button" class="secondary-button" type="button">Reset today</button>
+        </div>
+        <ul id="recent-events" class="event-list"></ul>
+      </section>
+
+      <footer class="footer">
+        <p id="status-line">Loading stats...</p>
+      </footer>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
