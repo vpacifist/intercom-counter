@@ -1,5 +1,7 @@
 const MAX_EVENT_LOG = 250;
+const MAX_DEBUG_LOG = 60;
 const DEDUPE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+const CLOSE_DEDUPE_WINDOW_MS = 15000;
 
 export function makeDateKey(input = Date.now()) {
   const date = new Date(input);
@@ -25,6 +27,7 @@ export function createInitialState() {
     dailyStats: {},
     conversations: {},
     eventLog: [],
+    debugLog: [],
     recentEventIds: {}
   };
 }
@@ -40,6 +43,7 @@ export function sanitizeState(candidate) {
     dailyStats: isPlainObject(candidate.dailyStats) ? candidate.dailyStats : {},
     conversations: isPlainObject(candidate.conversations) ? candidate.conversations : {},
     eventLog: Array.isArray(candidate.eventLog) ? candidate.eventLog.slice(0, MAX_EVENT_LOG) : [],
+    debugLog: Array.isArray(candidate.debugLog) ? candidate.debugLog.slice(0, MAX_DEBUG_LOG) : [],
     recentEventIds: isPlainObject(candidate.recentEventIds) ? candidate.recentEventIds : {}
   };
 }
@@ -72,6 +76,7 @@ export function applyEvent(stateInput, eventInput) {
   const conversation = nextState.conversations[event.conversationId] || {
     lastReplyDate: null,
     lastCloseDate: null,
+    lastCloseAt: null,
     lastSeenAt: null
   };
 
@@ -84,8 +89,13 @@ export function applyEvent(stateInput, eventInput) {
   }
 
   if (event.type === "conversation_closed") {
+    if (conversation.lastCloseAt && event.occurredAt - conversation.lastCloseAt < CLOSE_DEDUPE_WINDOW_MS) {
+      return nextState;
+    }
+
     day.closed += 1;
     conversation.lastCloseDate = event.dateKey;
+    conversation.lastCloseAt = event.occurredAt;
   }
 
   conversation.lastSeenAt = event.occurredAt;
@@ -110,6 +120,19 @@ export function getTodayStats(stateInput, now = Date.now()) {
   const state = sanitizeState(stateInput);
   const dateKey = makeDateKey(now);
   return state.dailyStats[dateKey] || createEmptyDay(dateKey);
+}
+
+export function appendDebugLog(stateInput, entryInput) {
+  const state = sanitizeState(stateInput);
+  const entry = normalizeDebugEntry(entryInput);
+  if (!entry) {
+    return state;
+  }
+
+  return {
+    ...state,
+    debugLog: [entry, ...state.debugLog].slice(0, MAX_DEBUG_LOG)
+  };
 }
 
 export function resetDay(stateInput, dateKey) {
@@ -143,6 +166,18 @@ function normalizeEvent(eventInput) {
     dateKey,
     eventId,
     source: eventInput.source || "unknown"
+  };
+}
+
+function normalizeDebugEntry(entryInput) {
+  if (!entryInput || typeof entryInput !== "object") {
+    return null;
+  }
+
+  return {
+    occurredAt: typeof entryInput.occurredAt === "number" ? entryInput.occurredAt : Date.now(),
+    stage: typeof entryInput.stage === "string" ? entryInput.stage : "unknown",
+    details: isPlainObject(entryInput.details) ? entryInput.details : {}
   };
 }
 

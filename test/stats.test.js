@@ -72,6 +72,25 @@ test("close increments closed counter", () => {
   assert.equal(today.closed, 1);
 });
 
+test("duplicate close within dedupe window is ignored", () => {
+  const now = Date.UTC(2026, 3, 24, 8, 0, 0);
+  const first = applyEvent(createInitialState(), {
+    type: "conversation_closed",
+    conversationId: "123",
+    occurredAt: now,
+    eventId: "close-1"
+  });
+  const second = applyEvent(first, {
+    type: "conversation_closed",
+    conversationId: "123",
+    occurredAt: now + 2000,
+    eventId: "close-2"
+  });
+
+  const today = getTodayStats(second, now);
+  assert.equal(today.closed, 1);
+});
+
 test("duplicate event ids are ignored", () => {
   const now = Date.UTC(2026, 3, 24, 8, 0, 0);
   const first = applyEvent(createInitialState(), {

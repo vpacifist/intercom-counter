@@ -27,6 +27,16 @@
       "run_at": "document_start"
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/content/page-hook.js"
+      ],
+      "matches": [
+        "https://app.intercom.com/*"
+      ]
+    }
+  ],
   "action": {
     "default_title": "Intercom Counter",
     "default_popup": "src/popup/popup.html",

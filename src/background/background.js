@@ -1,4 +1,4 @@
-import { applyEvent, createInitialState, getTodayStats, makeDateKey, resetDay, sanitizeState } from "../shared/stats.js";
+import { appendDebugLog, applyEvent, createInitialState, getTodayStats, makeDateKey, resetDay, sanitizeState } from "../shared/stats.js";
 
 const STORAGE_KEY = "intercomCounterState";
 
@@ -20,6 +20,10 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.type === "intercom:event") {
     return handleIntercomEvent(message.payload);
+  }
+
+  if (message.type === "intercom:debug") {
+    return handleDebugEvent(message.payload);
   }
 
   if (message.type === "stats:getToday") {
@@ -45,13 +49,21 @@ async function handleIntercomEvent(payload) {
   return { ok: true, today: getTodayStats(nextState) };
 }
 
+async function handleDebugEvent(payload) {
+  const state = await loadState();
+  const nextState = appendDebugLog(state, payload);
+  await saveState(nextState);
+  return { ok: true };
+}
+
 async function handleGetToday() {
   const state = await loadState();
   return {
     ok: true,
     today: getTodayStats(state),
     currentDateKey: makeDateKey(),
-    recentEvents: state.eventLog.slice(0, 8)
+    recentEvents: state.eventLog.slice(0, 8),
+    recentDebug: state.debugLog.slice(0, 12)
   };
 }
 
