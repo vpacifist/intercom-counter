@@ -93,7 +93,10 @@ async function saveState(state) {
 async function refreshBadge(state) {
   const today = getTodayStats(state);
   const badgeText = today.dialogs > 0 ? String(today.dialogs) : "";
-  await browser.action.setBadgeBackgroundColor({ color: "#2F855A" });
+  await browser.action.setBadgeBackgroundColor({ color: "#22C55E" });
+  if (browser.action.setBadgeTextColor) {
+    await browser.action.setBadgeTextColor({ color: "#052E16" });
+  }
   await browser.action.setBadgeText({ text: badgeText });
   await browser.action.setTitle({
     title: `Intercom Counter\nDialogs: ${today.dialogs}\nReplies: ${today.replies}\nClosed: ${today.closed}`
