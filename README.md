@@ -73,7 +73,11 @@ The debug panel exists because Intercom's internal requests are noisy and can ch
 ```bash
 npm test
 npm run check
+npm run validate
+npm run build
 ```
+
+`npm run build` creates the uploadable Firefox package in `web-ext-artifacts/`.
 
 ### Project structure
 
