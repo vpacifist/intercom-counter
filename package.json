@@ -6,8 +6,8 @@
   "scripts": {
     "test": "node --test",
     "check": "node --test && node --check src/content/intercom-observer.js && node --check src/popup/popup.js",
-    "validate": "web-ext lint",
-    "build": "web-ext build --overwrite-dest"
+    "validate": "web-ext lint --ignore-files store-assets store-assets/** output output/**",
+    "build": "web-ext build --overwrite-dest --ignore-files store-assets store-assets/** output output/**"
   },
   "devDependencies": {
     "web-ext": "^10.1.0"
