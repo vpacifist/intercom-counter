@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --test && node --check src/content/intercom-observer.js && node --check src/popup/popup.js",
+    "check": "node --test && node --check src/background/background.js && node --check src/content/intercom-observer.js && node --check src/popup/popup.js && node --check src/shared/day-rollover.js",
     "validate": "web-ext lint --ignore-files store-assets store-assets/** output output/**",
     "build": "web-ext build --overwrite-dest --ignore-files store-assets store-assets/** output output/**"
   },

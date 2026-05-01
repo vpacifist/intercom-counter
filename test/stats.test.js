@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { getNextLocalDayStart } from "../src/shared/day-rollover.js";
 import { applyEvent, createInitialState, getTodayStats, makeDateKey, resetDay } from "../src/shared/stats.js";
 
 test("first daily reply increments dialogs and replies", () => {
@@ -124,4 +125,28 @@ test("resetDay clears current day counters", () => {
   assert.equal(today.dialogs, 0);
   assert.equal(today.replies, 0);
   assert.equal(today.closed, 0);
+});
+
+test("empty next day returns fresh zero counters", () => {
+  const firstDay = Date.UTC(2026, 3, 24, 8, 0, 0);
+  const secondDay = Date.UTC(2026, 3, 25, 8, 0, 0);
+  const state = applyEvent(createInitialState(), {
+    type: "reply_sent",
+    conversationId: "123",
+    occurredAt: firstDay,
+    eventId: "reply-1"
+  });
+
+  const today = getTodayStats(state, secondDay);
+  assert.equal(today.dateKey, makeDateKey(secondDay));
+  assert.equal(today.dialogs, 0);
+  assert.equal(today.replies, 0);
+  assert.equal(today.closed, 0);
+});
+
+test("daily rollover is scheduled for the next local day start", () => {
+  const evening = new Date(2026, 3, 24, 23, 59, 30).getTime();
+  const nextDayStart = new Date(2026, 3, 25, 0, 0, 0).getTime();
+
+  assert.equal(getNextLocalDayStart(evening), nextDayStart);
 });

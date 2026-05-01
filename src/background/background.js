@@ -1,16 +1,28 @@
 import { appendDebugLog, applyEvent, createInitialState, getTodayStats, makeDateKey, resetDay, sanitizeState } from "../shared/stats.js";
+import { getNextLocalDayStart } from "../shared/day-rollover.js";
 
 const STORAGE_KEY = "intercomCounterState";
+const DAILY_ROLLOVER_ALARM = "daily-rollover";
 
 browser.runtime.onInstalled.addListener(async () => {
   const state = await loadState();
   await saveState(state);
   await refreshBadge(state);
+  await scheduleDailyRollover();
 });
 
 browser.runtime.onStartup.addListener(async () => {
   const state = await loadState();
   await refreshBadge(state);
+  await scheduleDailyRollover();
+});
+
+browser.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name !== DAILY_ROLLOVER_ALARM) {
+    return;
+  }
+
+  return handleDailyRollover();
 });
 
 browser.runtime.onMessage.addListener((message) => {
@@ -58,6 +70,8 @@ async function handleDebugEvent(payload) {
 
 async function handleGetToday() {
   const state = await loadState();
+  await refreshBadge(state);
+  await scheduleDailyRollover();
   return {
     ok: true,
     today: getTodayStats(state),
@@ -81,6 +95,12 @@ async function handleResetToday() {
   return { ok: true, today: getTodayStats(nextState) };
 }
 
+async function handleDailyRollover() {
+  const state = await loadState();
+  await refreshBadge(state);
+  await scheduleDailyRollover();
+}
+
 async function loadState() {
   const stored = await browser.storage.local.get(STORAGE_KEY);
   return sanitizeState(stored[STORAGE_KEY] || createInitialState());
@@ -100,5 +120,11 @@ async function refreshBadge(state) {
   await browser.action.setBadgeText({ text: badgeText });
   await browser.action.setTitle({
     title: `Intercom Counter\nDialogs: ${today.dialogs}\nReplies: ${today.replies}\nClosed: ${today.closed}`
+  });
+}
+
+async function scheduleDailyRollover() {
+  await browser.alarms.create(DAILY_ROLLOVER_ALARM, {
+    when: getNextLocalDayStart(Date.now()) + 1000
   });
 }

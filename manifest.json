@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Tracks your daily Intercom dialogs, replies, and closed conversations.",
   "permissions": [
+    "alarms",
     "storage",
     "tabs"
   ],
