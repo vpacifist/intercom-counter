@@ -1,11 +1,12 @@
 {
   "name": "intercom-counter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --test && node --check src/background/background.js && node --check src/content/intercom-observer.js && node --check src/popup/popup.js && node --check src/shared/day-rollover.js",
+    "check": "node --test && node --check src/background/background.js && node --check src/content/intercom-observer.js && node --check src/popup/popup.js && node --check src/shared/day-rollover.js && node --check tools/version-status.js",
+    "version:status": "node tools/version-status.js",
     "validate": "web-ext lint --ignore-files store-assets store-assets/** output output/**",
     "build": "web-ext build --overwrite-dest --ignore-files store-assets store-assets/** output output/**"
   },

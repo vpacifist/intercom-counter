@@ -73,11 +73,14 @@ The debug panel exists because Intercom's internal requests are noisy and can ch
 ```bash
 npm test
 npm run check
+npm run version:status
 npm run validate
 npm run build
 ```
 
 `npm run build` creates the uploadable Firefox package in `web-ext-artifacts/`.
+
+Versioning and AMO release notes are tracked in [CHANGELOG.md](C:/projects/intercom-counter/CHANGELOG.md) and [docs/release.md](C:/projects/intercom-counter/docs/release.md). Published AMO commits are tagged as `amo-vX.Y.Z`; run `npm run version:status` to see what local/GitHub work has not reached the extension store yet.
 
 ### Project structure
 
