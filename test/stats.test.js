@@ -1,7 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 import { getNextLocalDayStart } from "../src/shared/day-rollover.js";
 import { applyEvent, createInitialState, getTodayStats, makeDateKey, resetDay } from "../src/shared/stats.js";
+
+async function loadTrafficClassifier() {
+  const source = await readFile(new URL("../src/content/page-hook.js", import.meta.url), "utf8");
+  const testHooks = {};
+  vm.runInNewContext(source, {
+    globalThis: { __intercomCounterTestHooks: testHooks }
+  });
+  return testHooks.classifyEventType;
+}
 
 test("first daily reply increments dialogs and replies", () => {
   const now = Date.UTC(2026, 3, 24, 8, 0, 0);
@@ -92,6 +103,44 @@ test("duplicate close within dedupe window is ignored", () => {
   assert.equal(today.closed, 1);
 });
 
+test("closed status in a background response is not classified as a close", async () => {
+  const classifyEventType = await loadTrafficClassifier();
+  const result = classifyEventType({
+    method: "POST",
+    url: "https://app.intercom.com/ember/inbox/conversations/list",
+    requestText: "",
+    responseText: '{"conversations":[{"id":"456","status":"closed"}]}',
+    intent: null
+  });
+
+  assert.equal(result, null);
+});
+
+test("explicit close request with matching intent is classified as a close", async () => {
+  const classifyEventType = await loadTrafficClassifier();
+  const result = classifyEventType({
+    method: "POST",
+    url: "https://app.intercom.com/ember/inbox/conversations/123/close",
+    requestText: "",
+    intent: { type: "conversation_closed" }
+  });
+
+  assert.equal(result, "conversation_closed");
+});
+
+test("reply response with matching intent is classified as a reply", async () => {
+  const classifyEventType = await loadTrafficClassifier();
+  const result = classifyEventType({
+    method: "POST",
+    url: "https://app.intercom.com/ember/inbox/conversations/123",
+    requestText: "",
+    combined: '{"type":"admin_reply"}',
+    intent: { type: "reply_sent" }
+  });
+
+  assert.equal(result, "reply_sent");
+});
+
 test("duplicate event ids are ignored", () => {
   const now = Date.UTC(2026, 3, 24, 8, 0, 0);
   const first = applyEvent(createInitialState(), {
@@ -125,6 +174,47 @@ test("resetDay clears current day counters", () => {
   assert.equal(today.dialogs, 0);
   assert.equal(today.replies, 0);
   assert.equal(today.closed, 0);
+});
+
+test("first reply after reset counts the conversation again", () => {
+  const now = Date.UTC(2026, 3, 24, 8, 0, 0);
+  const state = applyEvent(createInitialState(), {
+    type: "reply_sent",
+    conversationId: "123",
+    occurredAt: now,
+    eventId: "reply-before-reset"
+  });
+  const reset = resetDay(state, makeDateKey(now));
+  const afterReset = applyEvent(reset, {
+    type: "reply_sent",
+    conversationId: "123",
+    occurredAt: now + 1000,
+    eventId: "reply-after-reset"
+  });
+
+  const today = getTodayStats(afterReset, now);
+  assert.equal(today.dialogs, 1);
+  assert.equal(today.replies, 1);
+});
+
+test("resetDay removes only current day events", () => {
+  const yesterday = Date.UTC(2026, 3, 23, 8, 0, 0);
+  const today = Date.UTC(2026, 3, 24, 8, 0, 0);
+  const previousState = applyEvent(createInitialState(), {
+    type: "reply_sent",
+    conversationId: "previous",
+    occurredAt: yesterday,
+    eventId: "reply-yesterday"
+  });
+  const state = applyEvent(previousState, {
+    type: "reply_sent",
+    conversationId: "current",
+    occurredAt: today,
+    eventId: "reply-today"
+  });
+
+  const reset = resetDay(state, makeDateKey(today));
+  assert.deepEqual(reset.eventLog.map((event) => event.eventId), ["reply-yesterday"]);
 });
 
 test("empty next day returns fresh zero counters", () => {

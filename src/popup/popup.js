@@ -1,3 +1,5 @@
+import { sendRuntimeMessage } from "../shared/extension-api.js";
+
 const dialogsValue = document.getElementById("dialogs-value");
 const repliesValue = document.getElementById("replies-value");
 const closedValue = document.getElementById("closed-value");
@@ -17,7 +19,7 @@ init().catch((error) => {
 resetButton.addEventListener("click", async () => {
   resetButton.disabled = true;
   try {
-    await browser.runtime.sendMessage({ type: "stats:resetToday" });
+    await sendRuntimeMessage({ type: "stats:resetToday" });
     await render();
   } finally {
     resetButton.disabled = false;
@@ -51,7 +53,7 @@ async function init() {
 }
 
 async function render() {
-  const response = await browser.runtime.sendMessage({ type: "stats:getToday" });
+  const response = await sendRuntimeMessage({ type: "stats:getToday" });
   if (!response || !response.ok) {
     statusLine.textContent = "Background page is unavailable.";
     return;

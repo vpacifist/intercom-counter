@@ -1,23 +1,33 @@
 import { appendDebugLog, applyEvent, createInitialState, getTodayStats, makeDateKey, resetDay, sanitizeState } from "../shared/stats.js";
 import { getNextLocalDayStart } from "../shared/day-rollover.js";
+import {
+  actionSetBadgeBackgroundColor,
+  actionSetBadgeText,
+  actionSetBadgeTextColor,
+  actionSetTitle,
+  alarmsCreate,
+  extensionApi,
+  storageLocalGet,
+  storageLocalSet
+} from "../shared/extension-api.js";
 
 const STORAGE_KEY = "intercomCounterState";
 const DAILY_ROLLOVER_ALARM = "daily-rollover";
 
-browser.runtime.onInstalled.addListener(async () => {
+extensionApi.runtime.onInstalled.addListener(async () => {
   const state = await loadState();
   await saveState(state);
   await refreshBadge(state);
   await scheduleDailyRollover();
 });
 
-browser.runtime.onStartup.addListener(async () => {
+extensionApi.runtime.onStartup.addListener(async () => {
   const state = await loadState();
   await refreshBadge(state);
   await scheduleDailyRollover();
 });
 
-browser.alarms.onAlarm.addListener((alarm) => {
+extensionApi.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== DAILY_ROLLOVER_ALARM) {
     return;
   }
@@ -25,32 +35,44 @@ browser.alarms.onAlarm.addListener((alarm) => {
   return handleDailyRollover();
 });
 
-browser.runtime.onMessage.addListener((message) => {
+extensionApi.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message !== "object") {
     return undefined;
   }
 
+  let responsePromise;
   if (message.type === "intercom:event") {
-    return handleIntercomEvent(message.payload);
+    responsePromise = handleIntercomEvent(message.payload);
   }
 
   if (message.type === "intercom:debug") {
-    return handleDebugEvent(message.payload);
+    responsePromise = handleDebugEvent(message.payload);
   }
 
   if (message.type === "stats:getToday") {
-    return handleGetToday();
+    responsePromise = handleGetToday();
   }
 
   if (message.type === "stats:getDebug") {
-    return handleGetDebug();
+    responsePromise = handleGetDebug();
   }
 
   if (message.type === "stats:resetToday") {
-    return handleResetToday();
+    responsePromise = handleResetToday();
   }
 
-  return undefined;
+  if (!responsePromise) {
+    return undefined;
+  }
+
+  responsePromise
+    .then((response) => sendResponse(response))
+    .catch((error) => {
+      console.error("[intercom-counter] message handler failed", error);
+      sendResponse({ ok: false, error: error.message });
+    });
+
+  return true;
 });
 
 async function handleIntercomEvent(payload) {
@@ -102,29 +124,27 @@ async function handleDailyRollover() {
 }
 
 async function loadState() {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
+  const stored = await storageLocalGet(STORAGE_KEY);
   return sanitizeState(stored[STORAGE_KEY] || createInitialState());
 }
 
 async function saveState(state) {
-  await browser.storage.local.set({ [STORAGE_KEY]: state });
+  await storageLocalSet({ [STORAGE_KEY]: state });
 }
 
 async function refreshBadge(state) {
   const today = getTodayStats(state);
   const badgeText = today.dialogs > 0 ? String(today.dialogs) : "";
-  await browser.action.setBadgeBackgroundColor({ color: "#22C55E" });
-  if (browser.action.setBadgeTextColor) {
-    await browser.action.setBadgeTextColor({ color: "#052E16" });
-  }
-  await browser.action.setBadgeText({ text: badgeText });
-  await browser.action.setTitle({
+  await actionSetBadgeBackgroundColor({ color: "#22C55E" });
+  await actionSetBadgeTextColor({ color: "#052E16" });
+  await actionSetBadgeText({ text: badgeText });
+  await actionSetTitle({
     title: `Intercom Counter\nDialogs: ${today.dialogs}\nReplies: ${today.replies}\nClosed: ${today.closed}`
   });
 }
 
 async function scheduleDailyRollover() {
-  await browser.alarms.create(DAILY_ROLLOVER_ALARM, {
+  await alarmsCreate(DAILY_ROLLOVER_ALARM, {
     when: getNextLocalDayStart(Date.now()) + 1000
   });
 }

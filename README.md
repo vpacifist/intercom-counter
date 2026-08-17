@@ -1,6 +1,6 @@
 # Intercom Counter
 
-Firefox extension for personal Intercom throughput tracking.
+Firefox and Chrome extension for personal Intercom throughput tracking.
 
 It shows three daily counters in the toolbar popup:
 
@@ -34,7 +34,9 @@ Confirmed working scenarios:
 - `Snooze`
   is not counted directly; if the same conversation comes back later on the same day, it should continue the existing daily dialog instead of starting a new one
 
-All counters are stored locally in `browser.storage.local`.
+All counters are stored locally in extension storage.
+
+See [PRIVACY.md](PRIVACY.md) for details about local data handling and retention.
 
 ## Installation in Firefox
 
@@ -50,6 +52,18 @@ Notes:
 
 - this is a temporary install flow for local development
 - for long-term use in stable Firefox, the extension will need to be packaged and signed appropriately
+
+## Installation in Chrome
+
+For development and testing:
+
+1. Run `npm run prepare:chrome`
+2. Open `chrome://extensions/`
+3. Enable `Developer mode`
+4. Click `Load unpacked`
+5. Select [dist/chrome](C:/projects/intercom-counter/dist/chrome)
+6. Open `https://app.intercom.com/`
+7. Pin the extension and open the popup
 
 ## Using the popup
 
@@ -76,20 +90,26 @@ npm run check
 npm run version:status
 npm run validate
 npm run build
+npm run prepare:firefox
+npm run prepare:chrome
 ```
 
-`npm run build` creates the uploadable Firefox package in `web-ext-artifacts/`.
+`manifest.json` remains the source of truth for the extension version and Firefox development metadata. `npm run prepare:firefox` copies that source into `dist/firefox`; `npm run prepare:chrome` creates `dist/chrome` with the Chrome MV3 service worker manifest shape. `npm run build` creates browser-specific packages under `web-ext-artifacts/firefox/` and `web-ext-artifacts/chrome/`.
 
 Versioning and AMO release notes are tracked in [CHANGELOG.md](C:/projects/intercom-counter/CHANGELOG.md) and [docs/release.md](C:/projects/intercom-counter/docs/release.md). Published AMO commits are tagged as `amo-vX.Y.Z`; run `npm run version:status` to see what local/GitHub work has not reached the extension store yet.
 
 ### Project structure
 
-- `manifest.json`: Firefox extension manifest
+- `manifest.json`: source manifest and version source of truth
+- `dist/firefox/`: generated Firefox extension directory
+- `dist/chrome/`: generated Chrome extension directory
 - `src/content/intercom-observer.js`: bridge between page context and extension context
 - `src/content/page-hook.js`: Intercom page instrumentation for UI intents and network traffic
 - `src/background/background.js`: storage, badge updates, popup API
 - `src/popup/`: toolbar popup UI
+- `src/shared/extension-api.js`: Firefox/Chrome WebExtension API helpers
 - `src/shared/stats.js`: counter rules, persistence helpers, deduplication
+- `tools/prepare-extension.js`: generates browser-specific extension directories
 - `test/`: unit tests for counting logic
 - `docs/architecture.md`: short architecture note
 
@@ -111,7 +131,7 @@ Recommended pre-release check:
 
 ## Limitations
 
-- this tracks only activity performed from the local Firefox session where the extension is installed
+- this tracks only activity performed from the local browser session where the extension is installed
 - no sync between browsers or machines yet
 - Intercom request names and payloads may change over time
 - the historical chart UI is not built yet, though the project already stores day-based data locally

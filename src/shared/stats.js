@@ -137,9 +137,25 @@ export function appendDebugLog(stateInput, entryInput) {
 
 export function resetDay(stateInput, dateKey) {
   const state = sanitizeState(stateInput);
+  const conversations = {};
+
+  for (const [conversationId, conversation] of Object.entries(state.conversations)) {
+    const nextConversation = { ...conversation };
+    if (nextConversation.lastReplyDate === dateKey) {
+      nextConversation.lastReplyDate = null;
+    }
+    if (nextConversation.lastCloseDate === dateKey) {
+      nextConversation.lastCloseDate = null;
+      nextConversation.lastCloseAt = null;
+    }
+    conversations[conversationId] = nextConversation;
+  }
+
   const nextState = {
     ...state,
-    dailyStats: { ...state.dailyStats }
+    dailyStats: { ...state.dailyStats },
+    conversations,
+    eventLog: state.eventLog.filter((event) => event.dateKey !== dateKey)
   };
   nextState.dailyStats[dateKey] = createEmptyDay(dateKey);
   return nextState;

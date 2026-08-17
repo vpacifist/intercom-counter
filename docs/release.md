@@ -6,6 +6,7 @@ The project intentionally uses a small release process:
 - npm/project version: `package.json` and `package-lock.json`
 - store release record: git tags named `amo-vX.Y.Z`
 - release notes: `CHANGELOG.md`
+- browser-specific build directories: `dist/firefox` and `dist/chrome`
 
 ## Check Current State
 
@@ -33,7 +34,7 @@ npm run validate
 npm run build
 ```
 
-4. Upload the generated package from `web-ext-artifacts/`.
+4. Upload the generated Firefox package from `web-ext-artifacts/firefox/`.
 5. When AMO accepts it, tag the accepted commit:
 
 ```bash
@@ -42,3 +43,16 @@ git push origin main --tags
 ```
 
 Do not create the AMO tag before acceptance unless the user explicitly wants a candidate tag.
+
+## Preparing a Chrome Package
+
+1. Confirm the same version checks as above.
+2. Run:
+
+```bash
+npm run check
+npm run validate:chrome
+npm run build:chrome
+```
+
+3. Upload the generated Chrome package from `web-ext-artifacts/chrome/`.

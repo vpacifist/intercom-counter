@@ -1,4 +1,12 @@
 (function main() {
+  if (globalThis.__intercomCounterTestHooks) {
+    globalThis.__intercomCounterTestHooks.classifyEventType = classifyEventType;
+  }
+
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+
   if (window.__intercomCounterPageHookInjected) {
     return;
   }
@@ -198,7 +206,6 @@
       method,
       url,
       requestText,
-      responseText,
       combined,
       intent
     });
@@ -295,13 +302,8 @@
 
     const urlText = String(url || "").toLowerCase();
     const requestPayload = String(requestText || "").toLowerCase();
-    const requestCombined = `${urlText}\n${requestPayload}\n${combined}`;
-
-    if (
-      /(\/close(?:[/?]|$)|close_conversation|conversation_closed|"state":"closed"|"status":"closed"|mark_closed|admin_close|status=closed|state=closed)/.test(requestCombined)
-    ) {
-      return "conversation_closed";
-    }
+    const requestCombined = `${urlText}\n${requestPayload}`;
+    const trafficCombined = `${requestCombined}\n${String(combined || "").toLowerCase()}`;
 
     if (!intent) {
       return null;
@@ -309,14 +311,14 @@
 
     if (
       intent.type === "conversation_closed" &&
-      /(\/close(?:[/?]|$)|close_conversation|conversation_closed|"state":"closed"|"status":"closed"|mark_closed|admin_close|status=closed|state=closed)/.test(requestCombined)
+      /(\/close(?:[/?\s]|$)|close_conversation|conversation_closed|"state":"closed"|"status":"closed"|mark_closed|admin_close|status=closed|state=closed)/.test(requestCombined)
     ) {
       return "conversation_closed";
     }
 
     if (
       intent.type === "reply_sent" &&
-      /(reply_to_conversation|admin_reply|send_reply|conversation_parts|message_parts|parts|reply)/.test(requestCombined)
+      /(reply_to_conversation|admin_reply|send_reply|conversation_parts|message_parts|parts|reply)/.test(trafficCombined)
     ) {
       return "reply_sent";
     }

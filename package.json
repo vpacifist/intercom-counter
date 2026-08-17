@@ -1,14 +1,20 @@
 {
   "name": "intercom-counter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --test && node --check src/background/background.js && node --check src/content/intercom-observer.js && node --check src/popup/popup.js && node --check src/shared/day-rollover.js && node --check tools/version-status.js",
+    "check": "node --test && node --check src/background/background.js && node --check src/content/intercom-observer.js && node --check src/popup/popup.js && node --check src/shared/day-rollover.js && node --check src/shared/extension-api.js && node --check tools/version-status.js && node --check tools/prepare-extension.js && node --check tools/validate-extension.js && node --check tools/package-chrome.js",
     "version:status": "node tools/version-status.js",
-    "validate": "web-ext lint --ignore-files store-assets store-assets/** output output/**",
-    "build": "web-ext build --overwrite-dest --ignore-files store-assets store-assets/** output output/**"
+    "prepare:firefox": "node tools/prepare-extension.js firefox",
+    "prepare:chrome": "node tools/prepare-extension.js chrome",
+    "validate:firefox": "npm run prepare:firefox && web-ext lint --source-dir dist/firefox",
+    "validate:chrome": "npm run prepare:chrome && node tools/validate-extension.js chrome",
+    "validate": "npm run validate:firefox && npm run validate:chrome",
+    "build:firefox": "npm run prepare:firefox && web-ext build --source-dir dist/firefox --artifacts-dir web-ext-artifacts/firefox --overwrite-dest",
+    "build:chrome": "npm run prepare:chrome && node tools/validate-extension.js chrome && node tools/package-chrome.js",
+    "build": "npm run build:firefox && npm run build:chrome"
   },
   "devDependencies": {
     "web-ext": "^10.1.0"
